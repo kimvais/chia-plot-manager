@@ -1,4 +1,6 @@
-# Swar's Chia Plot Manager 
+# Chia Plot Manager (originally Swar's Chia Plot manager)
+
+Code clean-up and properly packaged version.
 
 #### A plot manager for Chia plotting: https://www.chia.net/
 [English](README.md) / [Русский](README.RU.md)
