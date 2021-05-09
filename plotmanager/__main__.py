@@ -1,10 +1,11 @@
-import argparse
-
+import click
+from plotmanager.library.utilities.commands import (
+    analyze_logs as _analyze_logs,
+    start_manager,
+    stop_manager,
+    view as _view,
+    )
 from plotmanager.library.utilities.exceptions import InvalidArgumentException
-from plotmanager.library.utilities.commands import start_manager, stop_manager, view, analyze_logs
-
-
-parser = argparse.ArgumentParser(description='This is the central manager for Swar\'s Chia Plot Manager.')
 
 help_description = '''
 There are a few different actions that you can use: "start", "restart", "stop", "view", and "analyze_logs". "start" will 
@@ -17,26 +18,33 @@ will always be running in the background unless an error occurs. This field is c
 the progress settings in the YAML file.
 '''
 
-parser.add_argument(
-    dest='action',
-    type=str,
-    help=help_description,
-)
 
-args = parser.parse_args()
+@click.group()
+def cli():
+    pass
 
-if args.action == 'start':
+
+@cli.command()
+def start():
     start_manager()
-elif args.action == 'restart':
+
+
+@cli.command()
+def restart():
     stop_manager()
     start_manager()
-elif args.action == 'stop':
+
+
+@cli.command()
+def stop():
     stop_manager()
-elif args.action == 'view':
-    view()
-elif args.action == 'analyze_logs':
-    analyze_logs()
-else:
-    error_message = 'Invalid action provided. The valid options are "start", "restart", "stop", "view", and ' \
-                    '"analyze_logs".'
-    raise InvalidArgumentException(error_message)
+
+
+@cli.command()
+def view():
+    _view()
+
+
+@cli.command()
+def analyze_logs():
+    _analyze_logs()
