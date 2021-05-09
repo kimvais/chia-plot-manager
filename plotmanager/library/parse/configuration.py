@@ -1,9 +1,24 @@
-import pathlib
 import os
+import pathlib
+from dataclasses import dataclass
+from typing import List
+
 import yaml
 
-
 from plotmanager.library.utilities.exceptions import InvalidYAMLConfigException
+
+
+@dataclass
+class Config:
+    chia_location: str
+    log_directory: str
+    jobs: List[dict]
+    max_concurrent: int
+    manager_check_interval: int
+    progress_settings: dict
+    notification_settings: dict
+    log_level: str
+    view_settings: dict
 
 
 def _get_config():
@@ -54,6 +69,9 @@ def _get_jobs(config):
     return config['jobs']
 
 
+1
+
+
 def _get_global_max_concurrent_config(config):
     if 'global' not in config:
         raise InvalidYAMLConfigException('Failed to find global parameter in the YAML.')
@@ -100,16 +118,18 @@ def _check_parameters(parameter, expected_parameters, parameter_type):
 
 def get_config_info():
     config = _get_config()
-    chia_location = _get_chia_location(config=config)
     manager_check_interval, log_level = _get_manager_settings(config=config)
     log_directory = _get_log_settings(config=config)
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
-    jobs = _get_jobs(config=config)
-    max_concurrent = _get_global_max_concurrent_config(config=config)
-    progress_settings = _get_progress_settings(config=config)
-    notification_settings = _get_notifications_settings(config=config)
-    view_settings = _get_view_settings(config=config)
-
-    return chia_location, log_directory, jobs, manager_check_interval, max_concurrent, \
-        progress_settings, notification_settings, log_level, view_settings
+    return Config(
+        chia_location=_get_chia_location(config=config),
+        log_directory=log_directory,
+        jobs=_get_jobs(config=config),
+        manager_check_interval=manager_check_interval,
+        max_concurrent=_get_global_max_concurrent_config(config=config),
+        progress_settings=_get_progress_settings(config=config),
+        notification_settings=_get_notifications_settings(config=config),
+        log_level=log_level,
+        view_settings=_get_view_settings(config=config)
+        )

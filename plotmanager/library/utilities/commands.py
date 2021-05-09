@@ -1,19 +1,34 @@
 import os
 import pathlib
-import psutil
 import socket
 import sys
 import time
+from datetime import (
+    datetime,
+    timedelta,
+    )
 
-from datetime import datetime, timedelta
+import psutil
 
 from plotmanager.library.parse.configuration import get_config_info
-from plotmanager.library.utilities.exceptions import ManagerError, TerminationException
+from plotmanager.library.utilities.exceptions import (
+    ManagerError,
+    TerminationException,
+    )
 from plotmanager.library.utilities.jobs import load_jobs
-from plotmanager.library.utilities.log import analyze_log_dates, check_log_progress, analyze_log_times
+from plotmanager.library.utilities.log import (
+    analyze_log_dates,
+    analyze_log_times,
+    check_log_progress,
+    )
 from plotmanager.library.utilities.notifications import send_notifications
 from plotmanager.library.utilities.print import print_view
-from plotmanager.library.utilities.processes import is_windows, get_manager_processes, get_running_plots, start_process
+from plotmanager.library.utilities.processes import (
+    get_manager_processes,
+    get_running_plots,
+    is_windows,
+    start_process,
+    )
 
 
 def start_manager():
@@ -28,8 +43,7 @@ def start_manager():
     manager_log_file = open(manager_log_file_path, 'a')
     python_file_path = sys.executable
 
-    chia_location, log_directory, jobs, manager_check_interval, max_concurrent, progress_settings, \
-        notification_settings, debug_level, view_settings = get_config_info()
+    conf = get_config_info()
 
     extra_args = []
     if is_windows():
@@ -49,8 +63,8 @@ def start_manager():
     send_notifications(
         title='Plot manager started',
         body=f'Plot Manager has started on {socket.gethostname()}...',
-        settings=notification_settings,
-    )
+        settings=conf.notification_settings,
+        )
     print('Plot Manager has started...')
 
 
@@ -70,19 +84,24 @@ def stop_manager():
 
 
 def view():
-    chia_location, log_directory, config_jobs, manager_check_interval, max_concurrent, progress_settings, \
-        notification_settings, debug_level, view_settings = get_config_info()
-    view_check_interval = view_settings['check_interval']
-    analysis = {'files': {}}
-    drives = {'temp': [], 'temp2': [], 'dest': []}
-    jobs = load_jobs(config_jobs)
+    conf = get_config_info()
+    view_check_interval = conf.view_settings['check_interval']
+    analysis = {
+        'files': {}
+        }
+    drives = {
+        'temp': [],
+        'temp2': [],
+        'dest': []
+        }
+    jobs = load_jobs(conf.jobs)
     for job in jobs:
         drive = job.temporary_directory.split('\\')[0]
         drives['temp'].append(drive)
         directories = {
             'dest': job.destination_directory,
             'temp2': job.temporary2_directory,
-        }
+            }
         for key, directory_list in directories.items():
             if directory_list is None:
                 continue
@@ -101,13 +120,17 @@ def view():
     while True:
         running_work = {}
         try:
-            analysis = analyze_log_dates(log_directory=log_directory, analysis=analysis)
-            jobs = load_jobs(config_jobs)
+            analysis = analyze_log_dates(log_directory=conf.log_directory, analysis=analysis)
+            jobs = load_jobs(conf.jobs)
             jobs, running_work = get_running_plots(jobs=jobs, running_work=running_work)
-            check_log_progress(jobs=jobs, running_work=running_work, progress_settings=progress_settings,
-                               notification_settings=notification_settings, view_settings=view_settings)
-            print_view(jobs=jobs, running_work=running_work, analysis=analysis, drives=drives,
-                       next_log_check=datetime.now() + timedelta(seconds=60), view_settings=view_settings)
+            check_log_progress(
+                jobs=jobs, running_work=running_work, progress_settings=conf.progress_settings,
+                notification_settings=conf.notification_settings, view_settings=conf.view_settings
+                )
+            print_view(
+                jobs=jobs, running_work=running_work, analysis=analysis, drives=drives,
+                next_log_check=datetime.now() + timedelta(seconds=60), view_settings=conf.view_settings
+                )
             time.sleep(view_check_interval)
             has_file = False
             if len(running_work.values()) == 0:
@@ -127,6 +150,5 @@ def view():
 
 
 def analyze_logs():
-    chia_location, log_directory, jobs, manager_check_interval, max_concurrent, progress_settings, \
-       notification_settings, debug_level, view_settings = get_config_info()
-    analyze_log_times(log_directory)
+    conf = get_config_info()
+    analyze_log_times(conf.log_directory)
