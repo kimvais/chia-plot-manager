@@ -2,6 +2,15 @@
 
 Code clean-up and properly packaged version.
 
+## TL;DR instructions
+
+1. Get python3.8 from [Microsoft store](https://www.microsoft.com/en-us/p/python-38/9mssztt1n39l?activetab=pivot:overviewtab)
+2. in powershell:
+	1. `python -m venv env`
+	2. `. env/Scripts/activate.ps1`
+	3. `pip install chia-plot-manager`
+	
+
 #### A plot manager for Chia plotting: https://www.chia.net/
 [English](README.md) / [Русский](README.RU.md)
 
