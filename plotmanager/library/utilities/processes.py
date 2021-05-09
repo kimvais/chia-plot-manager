@@ -1,12 +1,12 @@
 import logging
 import os
 import platform
-import psutil
 import re
 import subprocess
-
 from copy import deepcopy
 from datetime import datetime
+
+import psutil
 
 from plotmanager.library.utilities.objects import Work
 
@@ -24,7 +24,6 @@ def _contains_in_list(string, lst, case_insensitive=False):
 
 
 def get_manager_processes():
-    processes = []
     for process in psutil.process_iter():
         try:
             if not re.search(r'^pythonw?(?:\d+\.\d+|\d+)?(?:\.exe)?$', process.name(), flags=re.I):
@@ -32,10 +31,9 @@ def get_manager_processes():
             if not _contains_in_list('python', process.cmdline(), case_insensitive=True) or \
                     not _contains_in_list('stateless-manager.py', process.cmdline()):
                 continue
-            processes.append(process)
+            yield process
         except psutil.NoSuchProcess:
             pass
-    return processes
 
 
 def is_windows():
@@ -140,9 +138,8 @@ def identify_drive(file_path, drives):
 
 def get_plot_id(file_path=None, contents=None):
     if not contents:
-        f = open(file_path, 'r')
-        contents = f.read()
-        f.close()
+        with open(file_path, 'r') as f:
+            contents = f.read()
 
     match = re.search(rf'^ID: (.*?)$', contents, flags=re.M)
     if match:
@@ -268,11 +265,9 @@ def get_running_plots(jobs, running_work):
 def start_process(args, log_file):
     kwargs = {}
     if is_windows():
-        flags = 0
-        flags |= 0x00000008
         kwargs = {
-            'creationflags': flags,
-        }
+            'creationflags': 0x00000008,
+            }
     process = subprocess.Popen(
         args=args,
         stdout=log_file,

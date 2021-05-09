@@ -20,21 +20,17 @@ class Config:
     log_level: str
     view_settings: dict
 
-
-def _get_config():
-    directory = pathlib.Path().resolve()
-    file_name = 'config.yaml'
-    file_path = os.path.join(directory, file_name)
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"Unable to find the config.yaml file. Expected location: {file_path}")
-    f = open(file_path, 'r')
-    config = yaml.load(stream=f, Loader=yaml.Loader)
-    f.close()
-    return config
-
-
-def _get_chia_location(config):
-    return config.get('chia_location', 'chia')
+    @staticmethod
+    def load():
+        directory = pathlib.Path().resolve()
+        file_name = 'config.yaml'
+        file_path = os.path.join(directory, file_name)
+        try:
+            with open(file_path, 'r') as f:
+                config = yaml.load(stream=f, Loader=yaml.Loader)
+        except OSError as e:
+            raise FileNotFoundError(f"Unable to find the config.yaml file. Expected location: {file_path}") from e
+        return config
 
 
 def _get_progress_settings(config):
@@ -67,9 +63,6 @@ def _get_jobs(config):
     if 'jobs' not in config:
         raise InvalidYAMLConfigException('Failed to find the jobs parameter in the YAML.')
     return config['jobs']
-
-
-1
 
 
 def _get_global_max_concurrent_config(config):
@@ -117,13 +110,13 @@ def _check_parameters(parameter, expected_parameters, parameter_type):
 
 
 def get_config_info():
-    config = _get_config()
+    config = Config.load()
     manager_check_interval, log_level = _get_manager_settings(config=config)
     log_directory = _get_log_settings(config=config)
     if not os.path.exists(log_directory):
         os.makedirs(log_directory)
     return Config(
-        chia_location=_get_chia_location(config=config),
+        chia_location=config.get('chia_location', 'chia'),
         log_directory=log_directory,
         jobs=_get_jobs(config=config),
         manager_check_interval=manager_check_interval,
