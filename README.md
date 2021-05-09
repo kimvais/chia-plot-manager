@@ -9,6 +9,7 @@ Code clean-up and properly packaged version.
 	1. `python -m venv env`
 	2. `. env/Scripts/activate.ps1`
 	3. `pip install chia-plot-manager`
+    4. `chia-plot-manager view`
 	
 
 #### A plot manager for Chia plotting: https://www.chia.net/
